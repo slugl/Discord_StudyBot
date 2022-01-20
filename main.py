@@ -6,9 +6,6 @@ from collections import defaultdict
 from discord.ext import commands
 import os
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
-
-sched = AsyncIOScheduler(timezone="Asia/Seoul")
 
 # Token값 가져오기
 TOKEN = os.environ.get("TOKEN")
@@ -240,4 +237,17 @@ async def 종료(ctx):
 
 app.run(TOKEN)
 
+# Scheduler test code
+sched = AsyncIOScheduler(timezone="Asia/Seoul")
 
+async def test_job():
+    print("hi")
+
+sched.add_job(test_job, "interval", seconds=3)
+sched.start()
+
+# Get event loop Test Code
+try:
+    asyncio.get_event_loop().run_forever()
+except KeyboardInterrupt:
+    pass
