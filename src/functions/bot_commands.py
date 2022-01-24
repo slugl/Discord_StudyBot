@@ -1,9 +1,8 @@
 import datetime
 import asyncio
 import discord
-from week_table import week_table
+from bot_class import week_table
 from io import BytesIO
-from main import today_attend, embed # 수정 필요!
 
 ##############
 ###기타 함수###
@@ -52,36 +51,6 @@ async def inside(db, today_study, today_study_time, today_rest_time, user, chann
     today_rest_time[user] = datetime.timedelta()
     today_study[user] = []
 
-# Daily reset task for apscheduler
-async def daily_save(app, today_study, today_study_time, today_rest_time, db):
-    # 초기화 전 !종료 하지 않은 사용자 있는지 확인 후 처리
-    channel = app.get_channel(931431787706597379)
-    await channel.send(
-            "일일 서버 데이터 저장 및 초기화 작업을 수행할게요!\n"
-            "데이터 저장을 위해 !공부 중인 사용자님들을 종료할게요!\n"
-            "작업이 완료된 후 다시 <!출석> 후 <!공부>해주세요!"
-        )
-    for user in today_study:
-        if len(today_study[user]) % 2 == 1: # !공부 중인 경우
-            await channel.send(f"{user} 님이 공부하고 계시네요!")
-            await inside(db, today_study, today_study_time, today_rest_time, user, channel)
-    
-    # today_attend 변수 초기화 - 문제 발생 부분! 수정 필요
-    global today_attend, embed
-    today_attend = []
-    embed = discord.Embed(title="출석정보", colour=discord.Colour.purple())
-    print('Reset today_attend')
-
-    # 주간 초기화 코드 - attend_info table's total_study_time
-    # "UPDATE attend_info SET total_study_time='00:00:00';"
-    now_for_reset = datetime.datetime.now().date().strftime("%A")
-    if now_for_reset == 'Monday':
-        guild = app.get_guild(931431787203284992)
-        for user in guild.members:
-            if not db.is_admit(user.name):
-                db.reset_total_study_time(user.name)
-
-    await channel.send("일간 데이터 저장 및 초기화가 완료되었어요!")
 
 # db에 사용자 등록
 async def _등록(ctx, db):
@@ -93,6 +62,7 @@ async def _등록(ctx, db):
     else:
         await ctx.send(f"[{ctx.author.name}] - 이미 동록된 사용자입니다")
 
+# 목표시간 시간단위로 설정
 async def _목표시간(ctx, time, db):
     # 등록된 사용자가 아닐 경우
     if db.is_admit(ctx.author.name):
@@ -179,7 +149,7 @@ async def _휴식(ctx, db, today_attend, today_study, count, today_rest_time, ap
 
         await wait_user()
 
-# today_rest_time 초기화 필요
+# 종료
 async def _종료(ctx, db, today_attend, today_study, today_study_time, today_rest_time):
     if db.is_admit(ctx.author.name):
         await ctx.send(f"'!등록'을 먼저 입력해주세요")
@@ -235,7 +205,7 @@ async def _랭킹(ctx, db):
 
 
 async def _기록(ctx):
-    week_table_class = week_table(ctx.author.name)
+    week_table_class = week_table.week_table(ctx.author.name)
     week_table_class.add_data()
 
     with BytesIO() as image_binary:
@@ -243,3 +213,38 @@ async def _기록(ctx):
         image_binary.seek(0)
         week_table_img = discord.File(fp=image_binary, filename="week_table.png")
         await ctx.send(file=week_table_img)
+
+# Daily Reset Function
+async def daily_save(app, guild_id):
+    print("In daily_save:", guild_id)
+    if guild_id == 0:
+        print('Failed to get guild_id during daily save')
+        return
+
+    # 초기화 전 !종료 하지 않은 사용자 있는지 확인 후 처리
+    channel = app.get_guild(guild_id).text_channels[0]
+    await channel.send(
+        "일일 서버 데이터 저장 및 초기화 작업을 수행할게요!\n"
+        "데이터 저장을 위해 !공부 중인 사용자님들을 종료할게요!\n"
+        "작업이 완료된 후 다시 <!출석> 후 <!공부>해주세요!"
+    )
+    for user in app.today_study:
+        if len(app.today_study[user]) % 2 == 1:  # !공부 중인 경우
+            await channel.send(f"{user} 님이 공부하고 계시네요!")
+            await inside(app.db, app.today_study, app.today_study_time, app.today_rest_time, user, channel)
+            
+    # today_attend 변수 초기화
+    app.today_attend = []
+    app.embed = discord.Embed(title="출석정보", colour=discord.Colour.purple())
+    print('Reset today_attend')
+
+    # 주간 초기화 코드 - attend_info table's total_study_time
+    # "UPDATE attend_info SET total_study_time='00:00:00';"
+    now_for_reset = datetime.datetime.now().date().strftime("%A")
+    if now_for_reset == 'Monday':
+        guild = app.get_guild(guild_id)
+        for user in guild.members:
+            if not app.db.is_admit(user.name):
+                app.db.reset_total_study_time(user.name)
+
+    await channel.send("일간 데이터 저장 및 초기화가 완료되었어요!")
