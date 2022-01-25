@@ -56,7 +56,7 @@ class StudyBot(commands.Bot):
         
         @self.event
         async def on_guild_join(guild):
-            print("Invited, guild_id =", self.guild_id)
+            print("Invited, guild_id =", guild.id)
             channel = guild.text_channels[0]
             await channel.send("도움말은 !help")
 
