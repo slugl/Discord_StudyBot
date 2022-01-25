@@ -61,10 +61,7 @@ class StudyBot(commands.Bot):
             self.guild_id = guild.id
             if self.guild_id:
                 if not self.scheduler_added:
-                    print("scheduler 추가")
-                    self.scheduler.add_job(bot_commands.daily_save, "cron", args=[self, self.guild_id], hour=5, minute=0, id="daily_save")
-                    self.scheduler.add_job(bot_commands.del_cursor, "interval", args = [self], hours = 1, id = "db_initialize")
-
+                    self.scheduler.add_job(bot_commands.daily_save, "cron", args=[self, self.guild_id], hour=17, minute=8, id="daily_save")
                     self.scheduler.start()
                     self.scheduler_added = True
             
@@ -117,3 +114,10 @@ class StudyBot(commands.Bot):
             await bot_commands._기록(ctx)
 
 
+'''
+
+
+# Initialize Scheduler
+scheduler = AsyncIOScheduler(timezone="Asia/Seoul")
+scheduler.add_job(daily_save, "cron", hour=5, minute=0, id="daily_save")
+scheduler.start()'''
