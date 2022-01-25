@@ -2,6 +2,7 @@ import datetime
 import asyncio
 import discord
 from bot_class import week_table
+from bot_class import database
 from io import BytesIO
 
 ##############
