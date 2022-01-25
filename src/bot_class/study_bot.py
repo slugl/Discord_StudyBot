@@ -62,6 +62,7 @@ class StudyBot(commands.Bot):
             if self.guild_id:
                 if not self.scheduler_added:
                     self.scheduler.add_job(bot_commands.daily_save, "cron", args=[self, self.guild_id], hour=17, minute=8, id="daily_save")
+                    self.scheduler.add_job(bot_commands.del_cursor, "interval", args = [self], minutes = 1)
                     self.scheduler.start()
                     self.scheduler_added = True
             
