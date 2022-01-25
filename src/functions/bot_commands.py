@@ -215,36 +215,33 @@ async def _기록(ctx):
         await ctx.send(file=week_table_img)
 
 # Daily Reset Function
-async def daily_save(app, guild_id):
-    print("In daily_save:", guild_id)
-    if guild_id == 0:
-        print('Failed to get guild_id during daily save')
-        return
+async def daily_save(app):
+    for guild in app.guilds:
+        # 초기화 전 !종료 하지 않은 사용자 있는지 확인 후 처리
+        channel = app.get_guild(guild.id).text_channels[0]
+        print(guild, channel)
+        await channel.send(
+            "일일 서버 데이터 저장 및 초기화 작업을 수행할게요!\n"
+            "데이터 저장을 위해 !공부 중인 사용자님들을 종료할게요!\n"
+            "작업이 완료된 후 다시 <!출석> 후 <!공부>해주세요!"
+        )
+        for member in guild.members:
+            if len(app.today_study[member.name]) % 2 == 1:  # !공부 중인 경우
+                await channel.send(f"{member.name} 님이 공부하고 계시네요!")
+                await inside(app.db, app.today_study, app.today_study_time, app.today_rest_time, member.name, channel)
 
-    # 초기화 전 !종료 하지 않은 사용자 있는지 확인 후 처리
-    channel = app.get_guild(guild_id).text_channels[0]
-    await channel.send(
-        "일일 서버 데이터 저장 및 초기화 작업을 수행할게요!\n"
-        "데이터 저장을 위해 !공부 중인 사용자님들을 종료할게요!\n"
-        "작업이 완료된 후 다시 <!출석> 후 <!공부>해주세요!"
-    )
-    for user in app.today_study:
-        if len(app.today_study[user]) % 2 == 1:  # !공부 중인 경우
-            await channel.send(f"{user} 님이 공부하고 계시네요!")
-            await inside(app.db, app.today_study, app.today_study_time, app.today_rest_time, user, channel)
-            
+        # 주간 초기화 코드 - attend_info table's total_study_time
+        # "UPDATE attend_info SET total_study_time='00:00:00';"
+        now_for_reset = datetime.datetime.now().date().strftime("%A")
+        if now_for_reset == 'Monday':
+            for member in guild.members:
+                if not app.db.is_admit(member.name):
+                    app.db.reset_total_study_time(member.name)
+    
     # today_attend 변수 초기화
     app.today_attend = []
     app.embed = discord.Embed(title="출석정보", colour=discord.Colour.purple())
     print('Reset today_attend')
 
-    # 주간 초기화 코드 - attend_info table's total_study_time
-    # "UPDATE attend_info SET total_study_time='00:00:00';"
-    now_for_reset = datetime.datetime.now().date().strftime("%A")
-    if now_for_reset == 'Monday':
-        guild = app.get_guild(guild_id)
-        for user in guild.members:
-            if not app.db.is_admit(user.name):
-                app.db.reset_total_study_time(user.name)
-
-    await channel.send("일간 데이터 저장 및 초기화가 완료되었어요!")
+    for guild in app.guilds:
+        await guild.text_channels[0].send("일간 데이터 저장 및 초기화가 완료되었어요!")

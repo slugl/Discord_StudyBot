@@ -59,9 +59,10 @@ class StudyBot(commands.Bot):
         @self.event
         async def on_guild_join(guild):
             self.guild_id = guild.id
+            print("Invited, guild_id =", self.guild_id)
             if self.guild_id:
                 if not self.scheduler_added:
-                    self.scheduler.add_job(bot_commands.daily_save, "cron", args=[self, self.guild_id], hour=17, minute=8, id="daily_save")
+                    self.scheduler.add_job(bot_commands.daily_save, "cron", args=[self], hour=4, minute=0, id="daily_save")
                     self.scheduler.start()
                     self.scheduler_added = True
             
