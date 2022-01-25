@@ -246,3 +246,9 @@ async def daily_save(app):
 
     for guild in app.guilds:
         await guild.text_channels[0].send("일간 데이터 저장 및 초기화가 완료되었어요!")
+
+# Database initialize
+async def del_cursor(app):
+    del app.db
+    app.db = database.DBupdater()
+    print("DB Initialized")

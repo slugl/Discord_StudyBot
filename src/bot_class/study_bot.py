@@ -32,14 +32,12 @@ class StudyBot(commands.Bot):
         self.count = defaultdict(datetime.timedelta)  # 10분을 얼마나 쉬었는지 체크
         self.today_study_time = defaultdict(datetime.timedelta)  # 유저의 오늘 공부시간
         self.scheduler = AsyncIOScheduler(timezone="Asia/Seoul")
-        self.guild_id = 0
-        self.scheduler_added = False
 
         # database here
         self.db = database.DBupdater()
 
         # constant variable
-        self.ATTEND_TIME = '09:00'
+        self.ATTEND_TIME = '10:00'
 
 
     # def add_schedule(self) -> None:
@@ -58,17 +56,14 @@ class StudyBot(commands.Bot):
         
         @self.event
         async def on_guild_join(guild):
-            self.guild_id = guild.id
             print("Invited, guild_id =", self.guild_id)
-            if self.guild_id:
-                if not self.scheduler_added:
-                    self.scheduler.add_job(bot_commands.daily_save, "cron", args=[self], hour=4, minute=0, id="daily_save")
-                    self.scheduler.add_job(bot_commands.del_cursor, "interval", args = [self], minutes = 1, id = "db_initialize")
-                    self.scheduler.start()
-                    self.scheduler_added = True
-            
             channel = guild.text_channels[0]
             await channel.send("도움말은 !help")
+
+        # Add Scheduler
+        self.scheduler.add_job(bot_commands.daily_save, "cron", args=[self], hour=4, minute=0, id="daily_save")
+        self.scheduler.add_job(bot_commands.del_cursor, "interval", args = [self], hours = 1, id = "db_initialize")
+        self.scheduler.start()
 
         ######################
         ### 명령어 처리 함수 ###
