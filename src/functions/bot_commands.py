@@ -253,3 +253,4 @@ async def daily_save(app, guild_id):
 async def del_cursor(app):
     del app.db
     app.db = database.DBupdater()
+    print("db 초기화 완료")
