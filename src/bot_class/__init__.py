@@ -1,2 +1,2 @@
-__all__ = ["class_draft", "week_table", "database_study"]
+__all__ = ["database", "week_table", "study_bot"]
 __version__ = "0.0.0"
