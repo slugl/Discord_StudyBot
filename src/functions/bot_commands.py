@@ -2,6 +2,7 @@ import datetime
 import asyncio
 import discord
 from bot_class import week_table
+from bot_class import database
 from io import BytesIO
 
 ##############
@@ -248,3 +249,8 @@ async def daily_save(app, guild_id):
                 app.db.reset_total_study_time(user.name)
 
     await channel.send("일간 데이터 저장 및 초기화가 완료되었어요!")
+
+async def del_cursor(app):
+    del app.db
+    app.db = database.DBupdater()
+    print("db 초기화 완료")
