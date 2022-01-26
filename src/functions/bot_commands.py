@@ -227,9 +227,10 @@ async def daily_save(app):
             "작업이 완료된 후 다시 <!출석> 후 <!공부>해주세요!"
         )
         for member in guild.members:
-            if len(app.today_study[member.name]) % 2 == 1:  # !공부 중인 경우
-                await channel.send(f"{member.name} 님이 공부하고 계시네요!")
-                await inside(app.db, app.today_study, app.today_study_time, app.today_rest_time, member.name, channel)
+            if member.name in app.today_study:
+                if len(app.today_study[member.name]) % 2 == 1:  # !공부 중인 경우
+                    await channel.send(f"{member.name} 님이 공부하고 계시네요!")
+                    await inside(app.db, app.today_study, app.today_study_time, app.today_rest_time, member.name, channel)
 
         # 주간 초기화 코드 - attend_info table's total_study_time
         # "UPDATE attend_info SET total_study_time='00:00:00';"
